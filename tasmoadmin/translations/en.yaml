@@ -18,5 +18,10 @@ configuration:
     description: >-
       The private key file to use for SSL. Note that this file must
       exist in the /ssl/ folder.
+  ota_server_ip:
+    name: OTA server IP
+    description: >-
+      IP address of Home Assistant that Tasmota devices use to download
+      firmware. Leave empty to detect it automatically.
 network:
-  9541/tcp: Web interface
+  9541/tcp: Web interface and OTA firmware downloads (must stay enabled for OTA)

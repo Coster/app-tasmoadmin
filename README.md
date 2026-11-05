@@ -1,4 +1,10 @@
-# Home Assistant Community App: TasmoAdmin
+# Home Assistant Community App: TasmoAdmin (Ingress fork)
+
+> Fork of [hassio-addons/app-tasmoadmin](https://github.com/hassio-addons/app-tasmoadmin)
+> adding **sidebar (ingress) support** and **automatic OTA configuration**.
+> Install: *Settings → Apps → App store → ⋮ → Repositories* and add
+> `https://github.com/Coster/app-tasmoadmin`. See
+> [DOCS.md](tasmoadmin/DOCS.md) for details.
 
 [![GitHub Release][releases-shield]][releases]
 ![Project Stage][project-stage-shield]

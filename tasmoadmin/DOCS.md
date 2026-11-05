@@ -1,4 +1,21 @@
-# Home Assistant Community App: TasmoAdmin
+# Home Assistant Community App: TasmoAdmin (Ingress fork)
+
+> **Fork of [hassio-addons/app-tasmoadmin](https://github.com/hassio-addons/app-tasmoadmin)**
+> with these changes:
+>
+> - **Sidebar / Ingress**: TasmoAdmin opens directly inside Home Assistant
+>   (no extra port, HA login protects it).
+> - **OTA works out of the box**: the OTA server IP/port is set to the Home
+>   Assistant host IP and port `9541` automatically (upstream defaults to the
+>   container IP, which Tasmota devices cannot reach). Override with
+>   `ota_server_ip` if needed.
+> - **Autoscan range** defaults to your local /24 network.
+> - **Larger uploads** (32 MB) for ESP32 firmware files.
+> - **Data import**: on first start, data from `/share/tasmoadmin/`
+>   (`devices.csv`, `MyConfig.json`) is imported.
+>
+> Port `9541` must stay enabled: devices download firmware from it via plain
+> HTTP (Tasmota OTA does not support HTTPS from self-signed servers).
 
 TasmoAdmin (formerly known as SonWEB) is an administrative web interface to
 manage all your Sonoff-Tasmota flashed devices centrally.
@@ -35,6 +52,7 @@ log_level: info
 ssl: false
 certfile: fullchain.pem
 keyfile: privkey.pem
+ota_server_ip: 192.168.1.10
 ```
 
 **Note**: _This is just an example, don't copy and past it! Create your own!_
@@ -75,6 +93,11 @@ The certificate file to use for SSL.
 The private key file to use for SSL.
 
 **Note**: _The file MUST be stored in `/ssl/`, which is the default_
+
+### Option: `ota_server_ip`
+
+IP address of your Home Assistant host that Tasmota devices use to download
+firmware during OTA updates. Leave it empty to detect it automatically.
 
 ## Changelog & Releases
 

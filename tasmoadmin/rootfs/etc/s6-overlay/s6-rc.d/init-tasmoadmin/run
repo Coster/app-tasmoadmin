@@ -4,13 +4,66 @@
 # Home Assistant Community App: TasmoAdmin
 # Configures TasmoAdmin
 # ==============================================================================
+declare cfg
+declare ota_ip
+declare ota_port
+declare current_ip
+declare net
 
 # Ensure persistant storage exists
 if ! bashio::fs.directory_exists "/data/tasmoadmin"; then
-    bashio::log.debug 'Data directory not initialized, doing that now...'
+    if bashio::fs.file_exists "/share/tasmoadmin/devices.csv"; then
+        bashio::log.info 'Importing existing TasmoAdmin data from /share/tasmoadmin...'
+        cp -R /var/www/tasmoadmin/data /data/tasmoadmin
+        cp -R /share/tasmoadmin/. /data/tasmoadmin/
+    else
+        bashio::log.debug 'Data directory not initialized, doing that now...'
+        cp -R /var/www/tasmoadmin/data /data/tasmoadmin
+    fi
+fi
 
-    # Setup structure
-    cp -R /var/www/tasmoadmin/data /data/tasmoadmin
+# ------------------------------------------------------------------------------
+# OTA server: Tasmota devices download firmware via plain HTTP from
+# http://<ota_server_ip>:<ota_server_port>/data/firmwares/...
+# TasmoAdmin defaults to the container IP, which devices cannot reach.
+# ------------------------------------------------------------------------------
+cfg=/data/tasmoadmin/MyConfig.json
+if ! bashio::fs.file_exists "${cfg}"; then
+    echo '{}' > "${cfg}"
+fi
+
+if bashio::config.has_value 'ota_server_ip'; then
+    ota_ip=$(bashio::config 'ota_server_ip')
+else
+    ota_ip=$(bashio::api.supervisor GET /network/info false \
+        '[.interfaces[] | select(.primary) | .ipv4.address[0]] | first // empty' \
+        2>/dev/null | cut -d/ -f1 || true)
+fi
+ota_port=$(bashio::addon.port 9541 2>/dev/null || true)
+
+if bashio::var.has_value "${ota_ip}" && bashio::var.has_value "${ota_port}"; then
+    current_ip=$(jq -r '.ota_server_ip // ""' "${cfg}")
+    if bashio::config.has_value 'ota_server_ip' \
+        || [[ -z "${current_ip}" || "${current_ip}" == 172.30.* ]]; then
+        bashio::log.info "OTA server set to http://${ota_ip}:${ota_port}"
+        jq --arg ip "${ota_ip}" --arg port "${ota_port}" \
+            '.ota_server_ip = $ip | .ota_server_port = $port' \
+            "${cfg}" > "${cfg}.tmp" && mv "${cfg}.tmp" "${cfg}"
+    else
+        bashio::log.info "OTA server (TasmoAdmin settings): http://${current_ip}:$(jq -r '.ota_server_port' "${cfg}")"
+    fi
+
+    # Default autoscan range: the local /24 instead of the container network
+    net="${ota_ip%.*}"
+    if [[ "$(jq -r '.scan_from_ip // ""' "${cfg}")" =~ ^(|172\.30\..*|192\.168\.178\.2)$ ]]; then
+        jq --arg f "${net}.2" --arg t "${net}.254" \
+            '.scan_from_ip = $f | .scan_to_ip = $t' \
+            "${cfg}" > "${cfg}.tmp" && mv "${cfg}.tmp" "${cfg}"
+    fi
+elif ! bashio::var.has_value "${ota_port}"; then
+    bashio::log.warning 'Port 9541 is disabled: Tasmota devices cannot download OTA firmware!'
+else
+    bashio::log.warning 'Could not determine host IP, set "ota_server_ip" in the app options.'
 fi
 
 # Ensure file permissions

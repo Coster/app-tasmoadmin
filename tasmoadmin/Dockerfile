@@ -33,6 +33,11 @@ RUN \
     \
     && cd /var/www/tasmoadmin \
     && rm -r vendor \
+    \
+    && sed -i "s#new OtaHelper(\$Config, _BASEURL_)#new OtaHelper(\$Config, getenv('TASMO_OTA_BASEURL') ?: _BASEURL_)#" \
+        pages/device_update.php pages/upload.php \
+    && grep -q "TASMO_OTA_BASEURL" pages/device_update.php \
+    && grep -q "TASMO_OTA_BASEURL" pages/upload.php \
     && composer install --no-dev --optimize-autoloader \
     \
     && apk del --no-cache --purge .build-dependencies \
@@ -50,7 +55,7 @@ RUN \
 COPY rootfs /
 
 # Health check
-HEALTHCHECK CMD if ! curl --fail http://127.0.0.1:9541  && ! curl --fail --insecure https://127.0.0.1:9541; then exit 1; fi
+HEALTHCHECK CMD curl --fail --silent --output /dev/null http://127.0.0.1:8099/login || exit 1
 
 # Build arguments
 ARG BUILD_ARCH
