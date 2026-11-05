@@ -44,7 +44,7 @@ ota_port=$(bashio::addon.port 9541 2>/dev/null || true)
 if bashio::var.has_value "${ota_ip}" && bashio::var.has_value "${ota_port}"; then
     current_ip=$(jq -r '.ota_server_ip // ""' "${cfg}")
     if bashio::config.has_value 'ota_server_ip' \
-        || [[ -z "${current_ip}" || "${current_ip}" == 172.30.* ]]; then
+        || [[ -z "${current_ip}" || "${current_ip}" == 172.30.* || "${current_ip}" == 127.* ]]; then
         bashio::log.info "OTA server set to http://${ota_ip}:${ota_port}"
         jq --arg ip "${ota_ip}" --arg port "${ota_port}" \
             '.ota_server_ip = $ip | .ota_server_port = $port' \
