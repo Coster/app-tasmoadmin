@@ -12,18 +12,18 @@ ARG TASMOADMIN_VERSION="v5.0.0"
 # hadolint ignore=DL3003
 RUN \
     apk add --no-cache \
-        nginx=1.30.6-r0 \
-        php85-curl=8.5.12-r0 \
-        php85-dom=8.5.12-r0 \
-        php85-fpm=8.5.12-r0 \
-        php85-iconv=8.5.12-r0 \
-        php85-mbstring=8.5.12-r0 \
-        php85-session=8.5.12-r0 \
-        php85-zip=8.5.12-r0 \
-        php85=8.5.12-r0 \
+        nginx \
+        php85-curl \
+        php85-dom \
+        php85-fpm \
+        php85-iconv \
+        php85-mbstring \
+        php85-session \
+        php85-zip \
+        php85 \
     \
     && apk add --no-cache --virtual .build-dependencies \
-        composer=2.10.3-r0 \
+        composer \
     \
     && curl -J -L -o /tmp/tasmoadmin.tar.gz \
         "https://github.com/TasmoAdmin/TasmoAdmin/releases/download/${TASMOADMIN_VERSION}/tasmoadmin_${TASMOADMIN_VERSION}.tar.gz" \
